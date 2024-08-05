@@ -1,82 +1,102 @@
 import React, { useState, useEffect } from 'react';
 
-const API_URL = 'https://playground.4geeks.com/todo/users/Beatriz_Herranz'; 
+const API_URL = 'https://playground.4geeks.com/todo/users/Beatriz_Herranz';
 
 const Home = () => {
-    const [tasks, setTasks] = useState([]);
-    const [newTask, setNewTask] = useState('');
-    const [error, setError] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState('');
+  const [error, setError] = useState(null);
 
-    // Función para obtener las tareas desde la API
-    const fetchTasks = async () => {
-        try {
-            const response = await fetch(API_URL);
-            if (!response.ok) throw new Error('Failed to fetch tasks');
-            const data = await response.json();
-            setTasks(data);
-        } catch (error) {
-            setError(error.message);
+  // Función para obtener las tareas desde la API
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) {
+        throw new Error(`Error fetching tasks: ${response.statusText}`);
+      }
+      const data = await response.json();
+      console.log('Fetched tasks:', data); // Para depuración
+      setTasks(data);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  // Función para agregar una nueva tarea
+  const addTask = () => {
+    if (newTask.trim() === '') return;
+    fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ name: newTask, completed: false }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(resp => {
+        console.log('Response from addTask:', resp); // Para depuración
+        if (!resp.ok) {
+          throw new Error(`Error adding task: ${resp.statusText}`);
         }
-    };
+        return resp.json();
+      })
+      .then(data => {
+        console.log('Added task:', data); // Para depuración
+        fetchTasks(); // Actualiza la lista de tareas después de agregar una nueva
+        setNewTask(''); // Limpia el campo de entrada
+      })
+      .catch(error => {
+        setError(error.message);
+        console.error('Error:', error); // Para depuración
+      });
+  };
 
-    // Función para agregar una nueva tarea
-    const addTask = async () => {
-        if (newTask.trim() === '') return; // Evita agregar tareas vacías
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ name: newTask, completed: false })
-            });
-            if (!response.ok) throw new Error('Failed to add task');
-            fetchTasks(); // Actualiza la lista de tareas después de agregar una nueva
-            setNewTask(''); // Limpia el campo de entrada
-        } catch (error) {
-            setError(error.message);
+  // Función para eliminar una tarea
+  const deleteTask = (taskId) => {
+    fetch(`${API_URL}/${taskId}`, {
+      method: 'DELETE'
+    })
+      .then(resp => {
+        console.log('Response from deleteTask:', resp); // Para depuración
+        if (!resp.ok) {
+          throw new Error(`Error deleting task: ${resp.statusText}`);
         }
-    };
+        return resp.json();
+      })
+      .then(data => {
+        console.log('Deleted task:', data); // Para depuración
+        fetchTasks(); // Actualiza la lista de tareas después de eliminar una
+      })
+      .catch(error => {
+        setError(error.message);
+        console.error('Error:', error); // Para depuración
+      });
+  };
 
-    // Función para eliminar una tarea
-    const deleteTask = async (taskId) => {
-        try {
-            const response = await fetch(`${API_URL}/${taskId}`, {
-                method: 'DELETE'
-            });
-            if (!response.ok) throw new Error('Failed to delete task');
-            fetchTasks(); // Actualiza la lista de tareas después de eliminar una
-        } catch (error) {
-            setError(error.message);
-        }
-    };
-
-    return (
-        <div>
-            <h1>Lista de Tareas</h1>
-            {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+  return (
+    <div>
+      <h1>Lista de Tareas</h1>
+      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+      <input
+        type="text"
+        value={newTask}
+        onChange={(e) => setNewTask(e.target.value)}
+        placeholder="Agregar nueva tarea"
+      />
+      <button onClick={addTask}>Agregar</button>
+      <ul>
+        {tasks.map((task) => (
+          <li key={task.id}>
             <input
-                type="text"
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                placeholder="Agregar nueva tarea"
+              type="checkbox"
+              checked={task.completed}
             />
-            <button onClick={addTask}>Agregar</button>
-            <ul>
-                {tasks.map((task) => (
-                    <li key={task.id}>
-                        <input
-                            type="checkbox"
-                            checked={task.completed}
-                            onChange={() => toggleTaskCompletion(task.id, task.completed)}
-                        />
-                        {task.name}
-                        <button onClick={() => deleteTask(task.id)}>Eliminar</button>
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
+            {task.name}
+            <button onClick={() => deleteTask(task.id)}>Eliminar</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 };
 
 export default Home;
