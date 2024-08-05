@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_URL = 'https://playground.4geeks.com/todo/tasks'; // Actualiza con tu URL de API si es diferente
+const API_URL = 'https://playground.4geeks.com/todo/users/Beatriz_Herranz'; 
 
 const Home = () => {
     const [tasks, setTasks] = useState([]);
@@ -38,23 +38,6 @@ const Home = () => {
         }
     };
 
-    // Función para marcar una tarea como completada
-    const toggleTaskCompletion = async (taskId, completed) => {
-        try {
-            const response = await fetch(`${API_URL}/${taskId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ completed: !completed })
-            });
-            if (!response.ok) throw new Error('Failed to update task');
-            fetchTasks(); // Actualiza la lista de tareas después de la actualización
-        } catch (error) {
-            setError(error.message);
-        }
-    };
-
     // Función para eliminar una tarea
     const deleteTask = async (taskId) => {
         try {
@@ -67,11 +50,6 @@ const Home = () => {
             setError(error.message);
         }
     };
-
-    // Efecto para cargar las tareas cuando el componente se monta
-    useEffect(() => {
-        fetchTasks();
-    }, []);
 
     return (
         <div>
